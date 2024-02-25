@@ -1,0 +1,54 @@
+version: '3.0'
+
+rpc:
+  listen: tcp://0.0.0.0:6050
+
+server:
+  command: "php public/index.php"
+  env:
+    - APP_ENV: "dev"
+    - APP_RUNTIME: Runtime\RoadRunnerSymfonyNyholm\Runtime
+
+http:
+  address: "0.0.0.0:8080"
+  max_request_size: 512
+  middleware: [ "gzip", "headers" ]
+  pool:
+    num_workers: 4
+    max_jobs: 64
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+    pool.debug: true
+
+logs:
+  level: debug
+  mode: development
+  channels:
+    http:
+      level: info
+
+headers:
+  response:
+    - "X-Powered-By: RoadRunner"
+
+#static:
+#  dir: "public"
+#  forbid: [ ".php", ".htaccess" ]
+#  allow: [ ".css", ".js", ".jpg", ".png", ".svg", ".gif", ".ico", ".html", ".json", ".xml", ".txt" ]
+
+# reload can reset rr servers when files change
+reload:
+  # refresh interval (default 1s)
+  interval: 1s
+
+  # file extensions to watch, defaults to [.php]
+  patterns: [ ".php" ]
+
+  # list of services to watch
+  services:
+    http:
+      # list of dirs, "" root
+      dirs: [ "src" ]
+
+      # include sub directories
+      recursive: true
