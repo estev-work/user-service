@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('users', name: 'users_', requirements: [])]
-class AuthController extends AbstractController
+class UserController extends AbstractController
 {
     #[Route(name: 'all', methods: 'GET', format: 'json')]
     public function getAll(

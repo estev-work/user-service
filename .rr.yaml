@@ -1,7 +1,7 @@
-version: '3.0'
+version: '3'
 
 rpc:
-  listen: tcp://0.0.0.0:6050
+  listen: tcp://0.0.0.0:6051
 
 server:
   command: "php public/index.php"
@@ -10,15 +10,18 @@ server:
     - APP_RUNTIME: Runtime\RoadRunnerSymfonyNyholm\Runtime
 
 http:
-  address: "0.0.0.0:8080"
+  address: "0.0.0.0:8051"
   max_request_size: 512
-  middleware: [ "gzip", "headers" ]
+  middleware: [ "gzip", "headers", "jwt" ]
   pool:
-    num_workers: 4
+    num_workers: 1
     max_jobs: 64
     allocate_timeout: 60s
     destroy_timeout: 60s
     pool.debug: true
+
+jwt:
+  secret: "api-secret"
 
 logs:
   level: debug

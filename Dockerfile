@@ -1,7 +1,4 @@
-FROM ghcr.io/roadrunner-server/roadrunner:2023.3.11 AS roadrunner
-FROM php:8.3-fpm-alpine3.17
-
-COPY --from=roadrunner /usr/bin/rr /usr/local/bin/rr
+FROM php:8.3-fpm-alpine3.17 as user
 
 RUN apk update && apk add --no-cache \
     libzip-dev \
@@ -10,13 +7,14 @@ RUN apk update && apk add --no-cache \
     git \
     $PHPIZE_DEPS \
     wget \
-    linux-headers
+    linux-headers \
+    && rm -rf /var/cache/apk/*
 
-# PHP pdo ext
-RUN docker-php-ext-install pdo_mysql zip
-# sockets
-RUN docker-php-ext-install sockets
+# Загрузка и установка install-php-extensions скрипта
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
 
+# Установка PHP расширений
+RUN install-php-extensions pdo_mysql zip sockets
 
 # Xdebug ext
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
@@ -28,7 +26,7 @@ RUN echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.
     && echo "xdebug.start_with_request = yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.client_port=9001" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+#    && echo "xdebug.remote_enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.log=/var/log/xdebug.log" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
     && echo "xdebug.idekey = PHPSTORM" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
@@ -38,10 +36,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Xdebug log
 RUN mkdir -p /var/log && touch /var/log/xdebug.log && chmod 777 /var/log/xdebug.log
 
-WORKDIR /var/www/user
+WORKDIR /var/www
 
 # Копирование конфигурационного файла RoadRunner в контейнер
 COPY .rr.yaml /etc/roadrunner/.rr.yaml
+
+CMD ["composer", "install"]
 
 EXPOSE 8080
 
